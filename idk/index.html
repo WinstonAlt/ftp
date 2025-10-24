@@ -1,34 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>GitHub Pages File Browser</title>
+  <title>GitHub FTP Browser</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    .folder::before {
+      content: "📁 ";
+    }
+    .file::before {
+      content: "📄 ";
+    }
+  </style>
 </head>
 <body>
-  <h1>Files in directory</h1>
+  <h1>GitHub FTP-Style File Browser</h1>
   <ul id="file-list"></ul>
 
   <script>
-    const owner = 'WinstonAlt';
-    const repo = 'ftp';
-    const path = '';  // folder path inside repo, empty string for root
+    const owner = 'WinstonAlt';   // 👈 your GitHub username
+    const repo = 'ftp';           // 👈 your repo name
+    const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents`;
+
+    // Read the ?path= parameter from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const path = urlParams.get('path') || '';
 
     async function fetchFiles() {
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      const apiUrl = `${apiBase}/${path}`;
       const response = await fetch(apiUrl);
       const data = await response.json();
 
       const list = document.getElementById('file-list');
+      list.innerHTML = '';
 
-      data.forEach(item => {
-        if (item.type === 'file') {
+      // Add "go back" link if not in root
+      if (path) {
+        const li = document.createElement('li');
+        const parent = path.split('/').slice(0, -1).join('/');
+        li.innerHTML = `<a href="?path=${parent}">⬅️ Go up</a>`;
+        list.appendChild(li);
+      }
+
+      // Display items (folders first)
+      data
+        .sort((a, b) => a.type.localeCompare(b.type))
+        .forEach(item => {
           const li = document.createElement('li');
-          const link = document.createElement('a');
-          link.href = item.download_url;
-          link.textContent = item.name;
-          li.appendChild(link);
+
+          if (item.type === 'dir') {
+            li.className = 'folder';
+            li.innerHTML = `<a href="?path=${item.path}">${item.name}/</a>`;
+          } else if (item.type === 'file') {
+            li.className = 'file';
+            li.innerHTML = `<a href="${item.download_url}" target="_blank">${item.name}</a>`;
+          }
+
           list.appendChild(li);
-        }
-      });
+        });
     }
 
     fetchFiles();
