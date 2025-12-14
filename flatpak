@@ -7,7 +7,7 @@ printf "Do you want to run with sudo (y/n): "
 read sudo
 
 if [ "$sudo" = "Y" ] || [ "$sudo" = "y" ]; then
-  sudo flatpak install $package
+  sudo flatpak-real install $package
 else
-  flatpak install $package
+  flatpak-real install $package
 fi
