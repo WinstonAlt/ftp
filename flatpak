@@ -1,0 +1,13 @@
+#!/bin/sh
+# What package to install
+echo "What package do you want to install: "
+read package
+# Ask if you need sudo
+printf "Do you want to run with sudo (y/n): "
+read sudo
+
+if [ "$sudo" = "Y" ] || [ "$sudo" = "y" ]; then
+  sudo flatpak install $package
+else
+  flatpak install $package
+fi
