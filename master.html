@@ -37,50 +37,47 @@
   <h1>FTP for branch: main</h1>
   <ul id="file-list"></ul>
 
-  <script>
-    const owner = 'WinstonAlt';   // 👈 your GitHub username
-    const repo = 'ftp';           // 👈 your repo name
-    const apiBase = `https://api.github.com/repos/WinstonAlt/ftp/branches/master`;
+<script>
+  const owner = 'WinstonAlt';
+  const repo = 'ftp';
+  const branch = 'master'; // change to 'master' if needed
+  const apiBase = `https://api.github.com/repos/${owner}/${repo}/contents`;
 
-    // Read the ?path= parameter from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const path = urlParams.get('path') || '';
+  const urlParams = new URLSearchParams(window.location.search);
+  const path = urlParams.get('path') || '';
 
-    async function fetchFiles() {
-      const apiUrl = `${apiBase}/${path}`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
+  async function fetchFiles() {
+    const apiUrl = `${apiBase}/${path}?ref=${branch}`;
+    const response = await fetch(apiUrl);
 
-      const list = document.getElementById('file-list');
-      list.innerHTML = '';
-
-      // Add "go back" link if not in root
-      if (path) {
-        const li = document.createElement('li');
-        const parent = path.split('/').slice(0, -1).join('/');
-        li.innerHTML = `<a href="?path=${parent}">⬅️ Go up</a>`;
-        list.appendChild(li);
-      }
-
-      // Display items (folders first)
-      data
-        .sort((a, b) => a.type.localeCompare(b.type))
-        .forEach(item => {
-          const li = document.createElement('li');
-
-          if (item.type === 'dir') {
-            li.className = 'folder';
-            li.innerHTML = `<a href="?path=${item.path}">${item.name}/</a>`;
-          } else if (item.type === 'file') {
-            li.className = 'file';
-            li.innerHTML = `<a href="${item.download_url}" target="_blank">${item.name}</a>`;
-          }
-
-          list.appendChild(li);
-        });
+    if (!response.ok) {
+      document.getElementById('file-list').innerHTML =
+        '<li>❌ Failed to load files</li>';
+      return;
     }
 
-    fetchFiles();
-  </script>
+    const data = await response.json();
+    const list = document.getElementById('file-list');
+    list.innerHTML = '';
+
+    if (path) {
+      const parent = path.split('/').slice(0, -1).join('/');
+      list.innerHTML += `<li><a href="?path=${parent}">⬅️ Go up</a></li>`;
+    }
+
+    data
+      .sort((a, b) => a.type.localeCompare(b.type))
+      .forEach(item => {
+        if (item.type === 'dir') {
+          list.innerHTML += `<li class="folder"><a href="?path=${item.path}">${item.name}/</a></li>`;
+        } else {
+          list.innerHTML += `<li class="file"><a href="${item.download_url}" target="_blank">${item.name}</a></li>`;
+        }
+      });
+  }
+
+  fetchFiles();
+</script>
+
 </body>
 </html>
